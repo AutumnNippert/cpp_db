@@ -101,6 +101,79 @@ namespace cpp_db{
             }
             return os;
         }
+
+        table select(std::string column, c_types value){
+            table t2;
+            t2.name = this->name;
+            t2.schema = this->schema;
+            t2.schema_map = this->schema_map;
+
+            for(auto r : this->rows){
+                for(int i = 0; i < r.data.size(); i++){
+                    if(this->schema[i].first == column && r.data[i] == value){
+                        t2.add_row(r);
+                    }
+                }
+            }
+
+            return t2;
+        }
+
+        table project(std::vector<std::string> columns){
+            table t2;
+            t2.name = this->name;
+            t2.schema_map = this->schema_map;
+
+            for(auto c : columns){
+                for(int i = 0; i < this->schema.size(); i++){
+                    if(this->schema[i].first == c){
+                        t2.schema.push_back(this->schema[i]);
+                    }
+                }
+            }
+
+            for(auto r : this->rows){
+                row r2;
+                for(int i = 0; i < r.data.size(); i++){
+                    for(auto c : columns){
+                        if(this->schema[i].first == c){
+                            r2.data.push_back(r.data[i]);
+                        }
+                    }
+                }
+                t2.add_row(r2);
+            }
+
+            return t2;
+        }
+
+        table cross(table t){
+            table t_out;
+            t_out.name = this->name + " x " + t.name;
+
+            for(auto c : this->schema){
+                t_out.schema.push_back(c);
+            }
+
+            for(auto c : t.schema){
+                t_out.schema.push_back(c);
+            }
+
+            for(auto r1 : this->rows){
+                for(auto r2 : t.rows){
+                    row r3;
+                    for(auto d : r1.data){
+                        r3.data.push_back(d);
+                    }
+                    for(auto d : r2.data){
+                        r3.data.push_back(d);
+                    }
+                    t_out.add_row(r3);
+                }
+            }
+
+            return t_out;
+        }
     };
 
     struct database{
@@ -134,56 +207,6 @@ namespace cpp_db{
             }
         }
     };
-}
-
-namespace db_ops{
-    using namespace cpp_db;    
-
-    // Binary Operators
-    table select(table t, std::string column, c_types value){
-        table t2;
-        t2.name = t.name;
-        t2.schema = t.schema;
-        t2.schema_map = t.schema_map;
-
-        for(auto r : t.rows){
-            for(int i = 0; i < r.data.size(); i++){
-                if(t.schema[i].first == column && r.data[i] == value){
-                    t2.add_row(r);
-                }
-            }
-        }
-
-        return t2;
-    }
-
-    table project(table t, std::vector<std::string> columns){
-        table t2;
-        t2.name = t.name;
-        t2.schema_map = t.schema_map;
-
-        for(auto c : columns){
-            for(int i = 0; i < t.schema.size(); i++){
-                if(t.schema[i].first == c){
-                    t2.schema.push_back(t.schema[i]);
-                }
-            }
-        }
-
-        for(auto r : t.rows){
-            row r2;
-            for(int i = 0; i < r.data.size(); i++){
-                for(auto c : columns){
-                    if(t.schema[i].first == c){
-                        r2.data.push_back(r.data[i]);
-                    }
-                }
-            }
-            t2.add_row(r2);
-        }
-
-        return t2;
-    }
 
     table rename(table t, std::string old_name, std::string new_name){
         table t2;
@@ -202,63 +225,5 @@ namespace db_ops{
         }
 
         return t2;
-    }
-
-    table cross_join(table t1, table t2){
-        table t3;
-        t3.name = t1.name + " x " + t2.name;
-
-        for(auto c : t1.schema){
-            t3.schema.push_back(c);
-        }
-
-        for(auto c : t2.schema){
-            t3.schema.push_back(c);
-        }
-
-        for(auto r1 : t1.rows){
-            for(auto r2 : t2.rows){
-                row r3;
-                for(auto d : r1.data){
-                    r3.data.push_back(d);
-                }
-                for(auto d : r2.data){
-                    r3.data.push_back(d);
-                }
-                t3.add_row(r3);
-            }
-        }
-
-        return t3;
-    }
-
-    table join(table t1, table t2, std::string column){
-        table t3;
-        t3.name = t1.name + " JOIN " + t2.name;
-
-        for(auto c : t1.schema){
-            t3.schema.push_back(c);
-        }
-
-        for(auto c : t2.schema){
-            t3.schema.push_back(c);
-        }
-
-        for(auto r1 : t1.rows){
-            for(auto r2 : t2.rows){
-                if(r1.data[t1.schema_map[column]] == r2.data[t2.schema_map[column]]){
-                    row r3;
-                    for(auto d : r1.data){
-                        r3.data.push_back(d);
-                    }
-                    for(auto d : r2.data){
-                        r3.data.push_back(d);
-                    }
-                    t3.add_row(r3);
-                }
-            }
-        }
-
-        return t3;
     }
 }

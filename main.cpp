@@ -1,8 +1,7 @@
 #include <iostream>
-#include "methods.hpp"
+#include "cpp_db.hpp"
 
 using namespace cpp_db;
-using namespace db_ops;
 
 int main(int argc, char const *argv[])
 {
@@ -16,11 +15,10 @@ int main(int argc, char const *argv[])
 
     std::cout << t << std::endl << std::endl;
 
-    table t2 = select(t, "name", "John Doe");
-    t2 = project(t2, {"name", "age"});
+    table t2 = t.select("name", "John Doe").project({"name", "age"});
     std::cout << t2 << std::endl;
 
-    table t3 = cross_join(t, t2);
+    table t3 = t.cross(t2);
     std::cout << t3 << std::endl;
     
     return 0;
